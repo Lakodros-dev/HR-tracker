@@ -8,7 +8,7 @@ import config
 
 async def set_work_hours(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Ish vaqtini o'rnatish"""
-    if update.effective_user.id != config.ADMIN_ID:
+    if not config.is_admin(update.effective_user.id):
         await update.message.reply_text("❌ Bu komanda faqat admin uchun!")
         return
     
@@ -48,7 +48,7 @@ async def set_work_hours(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def set_interval(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Hisobot oralig'ini o'rnatish"""
-    if update.effective_user.id != config.ADMIN_ID:
+    if not config.is_admin(update.effective_user.id):
         await update.message.reply_text("❌ Bu komanda faqat admin uchun!")
         return
     

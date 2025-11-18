@@ -27,7 +27,7 @@ Repository: https://github.com/Lakodros-dev/HR-tracker.git
 
 #### 2. Render.com Sozlamalari
 1. [Render Dashboard](https://dashboard.render.com/) ga kiring
-2. "New +" → "Web Service"
+2. "New +" → "Background Worker" ⚠️ (Web Service emas!)
 3. GitHub repository: `Lakodros-dev/HR-tracker`
 
 **Build & Start:**
@@ -47,7 +47,7 @@ MINI_APP_URL=https://map-for-marking-domain-static1.onrender.com/
 BACKEND_URL=https://map-for-marking-domain-1.onrender.com
 ```
 
-4. "Create Web Service" → Deploy boshlanadi (3-5 daqiqa)
+4. "Create Background Worker" → Deploy boshlanadi (3-5 daqiqa)
 5. Logs da `🤖 Bot ishga tushdi!` xabarini kutamiz
 
 ### Bot Deploy (VPS/Cloud)

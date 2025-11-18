@@ -143,7 +143,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_admin_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Admin tugmalarini qayta ishlash"""
-    if update.effective_user.id != config.ADMIN_ID:
+    if not config.is_admin(update.effective_user.id):
         return
     
     text = update.message.text
@@ -265,7 +265,7 @@ async def cancel_work_hours(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_office_location_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Ofis lokatsiyasini qo'lda belgilash - /set_office lat lng radius"""
-    if update.effective_user.id != config.ADMIN_ID:
+    if not config.is_admin(update.effective_user.id):
         return
     
     try:
@@ -303,9 +303,9 @@ async def handle_office_location_command(update: Update, context: ContextTypes.D
 
 async def handle_office_area_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Ofis hududini qo'lda belgilash - /set_area lat1 lng1 lat2 lng2"""
-    logger.info(f"/set_area komandasi qabul qilindi. User ID: {update.effective_user.id}, Admin ID: {config.ADMIN_ID}")
+    logger.info(f"/set_area komandasi qabul qilindi. User ID: {update.effective_user.id}, Admin IDs: {config.ADMIN_IDS}")
     
-    if update.effective_user.id != config.ADMIN_ID:
+    if not config.is_admin(update.effective_user.id):
         logger.warning(f"Admin emas! User ID: {update.effective_user.id}")
         return
     
@@ -375,7 +375,7 @@ def main():
     # Test komandasi
     async def test_webapp(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Web App test"""
-        if update.effective_user.id != config.ADMIN_ID:
+        if not config.is_admin(update.effective_user.id):
             return
         
         keyboard = [[InlineKeyboardButton("🗺 Test Mini App", web_app=WebAppInfo(url=config.MINI_APP_URL))]]
@@ -392,7 +392,7 @@ def main():
     # Sozlamalarni yangilash komandasi
     async def refresh_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Sozlamalarni yangilash (admin uchun)"""
-        if update.effective_user.id != config.ADMIN_ID:
+        if not config.is_admin(update.effective_user.id):
             return
         
         from settings_manager import clear_cache, load_settings
@@ -418,7 +418,7 @@ def main():
     # Video handler (file_id olish uchun)
     async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Video yuborilganda file_id ni qaytarish"""
-        if update.effective_user.id == config.ADMIN_ID:
+        if config.is_admin(update.effective_user.id):
             video = update.message.video
             file_id = video.file_id
             await update.message.reply_text(
@@ -490,7 +490,7 @@ def main():
         elif query.data == "admin_status":
             # Hodimlar holati
             employees = db.get_all_active_employees()
-            employees = [emp for emp in employees if emp[0] != config.ADMIN_ID]
+            employees = [emp for emp in employees if not config.is_admin(emp[0])]
             
             if not employees:
                 await query.edit_message_text("📊 Hozircha hodimlar yo'q")
@@ -520,7 +520,7 @@ def main():
         elif query.data == "general_report":
             # Umumiy hisobot
             employees = db.get_all_active_employees()
-            employees = [emp for emp in employees if emp[0] != config.ADMIN_ID]
+            employees = [emp for emp in employees if not config.is_admin(emp[0])]
             
             if not employees:
                 await query.edit_message_text("📊 Hozircha hodimlar yo'q")
@@ -673,7 +673,7 @@ async def show_guide(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     
     # Admin uchun qo'llanma
-    if user_id == config.ADMIN_ID:
+    if config.is_admin(user_id):
         ADMIN_GUIDE_VIDEO_FILE_ID = "BAACAgIAAxkBAAOqaRvw7txl2sjRZMCwWrnYrkmdPHYAAliCAAI9leFILEYNB-_S3142BA"
         try:
             await context.bot.send_video(
@@ -727,7 +727,7 @@ async def show_daily_report_menu(update: Update, context: ContextTypes.DEFAULT_T
     employees = db.get_all_employees()
     
     # Admin'ni ro'yxatdan chiqarish
-    employees = [emp for emp in employees if emp['user_id'] != config.ADMIN_ID]
+    employees = [emp for emp in employees if not config.is_admin(emp['user_id'])]
     
     if not employees:
         await update.message.reply_text("📊 Hozircha hodimlar yo'q")
@@ -770,7 +770,7 @@ async def admin_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     employees = db.get_all_active_employees()
     
     # Admin'ni ro'yxatdan chiqarish
-    employees = [emp for emp in employees if emp[0] != config.ADMIN_ID]
+    employees = [emp for emp in employees if not config.is_admin(emp[0])]
     
     if not employees:
         await update.message.reply_text("📊 Hozircha hodimlar yo'q")
@@ -803,7 +803,7 @@ async def start_live_map(update: Update, context: ContextTypes.DEFAULT_TYPE):
     employees = db.get_all_active_employees()
     
     # Admin'ni ro'yxatdan chiqarish
-    employees = [emp for emp in employees if emp[0] != config.ADMIN_ID]
+    employees = [emp for emp in employees if not config.is_admin(emp[0])]
     
     if not employees:
         await update.message.reply_text("📍 Hozircha hodimlar yo'q")

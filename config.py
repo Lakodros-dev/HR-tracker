@@ -5,7 +5,23 @@ load_dotenv()
 
 # Statik sozlamalar (.env dan)
 BOT_TOKEN = os.getenv('BOT_TOKEN')
-ADMIN_ID = int(os.getenv('ADMIN_ID', 0))
+
+# Admin ID lar (bir yoki bir nechta)
+_admin_ids = os.getenv('ADMIN_ID', '0')
+if ',' in _admin_ids:
+    # Bir nechta admin
+    ADMIN_IDS = [int(id.strip()) for id in _admin_ids.split(',') if id.strip()]
+else:
+    # Bitta admin
+    ADMIN_IDS = [int(_admin_ids)] if _admin_ids else [0]
+
+# Backward compatibility
+ADMIN_ID = ADMIN_IDS[0] if ADMIN_IDS else 0
+
+def is_admin(user_id: int) -> bool:
+    """Foydalanuvchi admin ekanligini tekshirish"""
+    return user_id in ADMIN_IDS
+
 MINI_APP_URL = os.getenv('MINI_APP_URL', '')
 
 # JSON bazadan sozlamalarni yuklash

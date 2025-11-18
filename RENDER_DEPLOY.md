@@ -7,9 +7,9 @@
 
 ### 2. Render.com Sozlamalari
 
-#### A. Yangi Web Service yarating
+#### A. Yangi Background Worker yarating
 1. [Render Dashboard](https://dashboard.render.com/) ga kiring
-2. **"New +"** → **"Web Service"** tanlang
+2. **"New +"** → **"Background Worker"** tanlang ⚠️ (Web Service emas!)
 3. GitHub repository ni ulang: `Lakodros-dev/HR-tracker`
 
 #### B. Sozlamalar (rasmda ko'rsatilganidek)
@@ -51,7 +51,7 @@ BACKEND_URL=https://map-for-marking-domain-1.onrender.com
 
 ### 3. Deploy Boshlash
 
-1. **"Create Web Service"** tugmasini bosing
+1. **"Create Background Worker"** tugmasini bosing
 2. Deploy jarayoni boshlanadi (3-5 daqiqa)
 3. **Logs** bo'limida quyidagi xabarni kutamiz:
    ```
@@ -100,13 +100,8 @@ Deploy muvaffaqiyatli bo'lsa:
 ### Free Plan Cheklovlari
 - ✅ 750 soat/oy (yetarli)
 - ✅ 512 MB RAM
-- ⚠️ 15 daqiqa faoliyatsizlikdan keyin uxlaydi
-- ⚠️ Birinchi so'rovda uyg'onishi 30 sekund oladi
-
-### Uxlashni Oldini Olish
-Render Free plan da bot 15 daqiqa faoliyatsizlikdan keyin uxlaydi.
-
-**Yechim:** Cron job yoki UptimeRobot ishlatib, har 10 daqiqada ping yuboring.
+- ✅ Background Worker uxlamaydi (Web Service dan farqi)
+- ✅ 24/7 ishlaydi
 
 ### Monitoring
 - Render Dashboard → Logs

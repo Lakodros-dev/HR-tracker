@@ -25,7 +25,7 @@ async def request_morning_location(context: ContextTypes.DEFAULT_TYPE):
         name = employee.get('name', 'Hodim')
         
         # Adminni o'tkazib yuborish
-        if user_id == config.ADMIN_ID:
+        if config.is_admin(user_id):
             continue
         
         # Faqat tasdiqlangan hodimlar uchun
@@ -70,7 +70,7 @@ async def check_missing_locations(context: ContextTypes.DEFAULT_TYPE):
         name = employee.get('name', 'Hodim')
         
         # Adminni o'tkazib yuborish
-        if user_id == config.ADMIN_ID:
+        if config.is_admin(user_id):
             continue
         
         # Faqat tasdiqlangan hodimlar uchun
@@ -126,7 +126,7 @@ async def send_lunch_notification(context: ContextTypes.DEFAULT_TYPE):
         name = employee.get('name', 'Hodim')
         
         # Adminni o'tkazib yuborish
-        if user_id == config.ADMIN_ID:
+        if config.is_admin(user_id):
             continue
         
         # Faqat tasdiqlangan hodimlar uchun
@@ -179,7 +179,7 @@ async def periodic_location_request(context: ContextTypes.DEFAULT_TYPE):
         name = employee.get('name', 'Hodim')
         
         # Adminni o'tkazib yuborish
-        if user_id == config.ADMIN_ID:
+        if config.is_admin(user_id):
             continue
         
         # Faqat tasdiqlangan hodimlar uchun

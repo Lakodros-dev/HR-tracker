@@ -1,6 +1,6 @@
 services:
-  # Telegram Bot Service
-  - type: web
+  # Telegram Bot Service (Background Worker)
+  - type: worker
     name: worker-tracker-bot
     env: python
     region: oregon

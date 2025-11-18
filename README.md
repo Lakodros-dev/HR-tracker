@@ -95,9 +95,9 @@ Mini App (alohida deploy):
 #### 1. GitHub Repository
 Repository allaqachon tayyor: https://github.com/Lakodros-dev/HR-tracker.git
 
-#### 2. Render.com da yangi Web Service yarating
+#### 2. Render.com da yangi Background Worker yarating
 1. [Render Dashboard](https://dashboard.render.com/) ga kiring
-2. "New +" → "Web Service" tanlang
+2. "New +" → "Background Worker" tanlang ⚠️ (Web Service emas!)
 3. GitHub repository ni ulang: `Lakodros-dev/HR-tracker`
 4. Quyidagi sozlamalarni kiriting:
 

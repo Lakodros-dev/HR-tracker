@@ -12,10 +12,10 @@ async def handle_mini_app_data(update: Update, context: ContextTypes.DEFAULT_TYP
     print("=" * 50)
     print("🔔 MINI APP MA'LUMOT KELDI!")
     print(f"User ID: {update.effective_user.id}")
-    print(f"Admin ID: {config.ADMIN_ID}")
+    print(f"Admin IDs: {config.ADMIN_IDS}")
     print("=" * 50)
     
-    if update.effective_user.id != config.ADMIN_ID:
+    if not config.is_admin(update.effective_user.id):
         await update.message.reply_text("❌ Bu funksiya faqat admin uchun!")
         return
     

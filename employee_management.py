@@ -20,7 +20,7 @@ async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     full_name = user.full_name or username
     
     # Admin uchun
-    if user_id == config.ADMIN_ID:
+    if config.is_admin(user_id):
         from telegram import KeyboardButton, ReplyKeyboardMarkup
         
         # Admin klaviaturasi
@@ -78,17 +78,19 @@ async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     db.add_employee(user_id, username, full_name)
     
     # Adminni xabardor qilish
-    try:
-        await context.bot.send_message(
-            chat_id=config.ADMIN_ID,
-            text=f"🆕 Yangi foydalanuvchi!\n\n"
-                 f"👤 Ism: {full_name}\n"
-                 f"🆔 Username: @{username}\n"
-                 f"🔢 ID: {user_id}\n\n"
-                 f"Tasdiqlash uchun /pending komandasi",
-        )
-    except Exception as e:
-        logger.error(f"Admin ga xabar yuborishda xato: {e}")
+    # Barcha adminlarga xabar yuborish
+    for admin_id in config.ADMIN_IDS:
+        try:
+            await context.bot.send_message(
+                chat_id=admin_id,
+                text=f"🆕 Yangi foydalanuvchi!\n\n"
+                     f"👤 Ism: {full_name}\n"
+                     f"🆔 Username: @{username}\n"
+                     f"🔢 ID: {user_id}\n\n"
+                     f"Tasdiqlash uchun /pending komandasi",
+            )
+        except Exception as e:
+            logger.error(f"Admin {admin_id} ga xabar yuborishda xato: {e}")
     
     await update.message.reply_text(
         f"✅ Ro'yxatdan o'tdingiz!\n\n"
