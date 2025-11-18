@@ -20,12 +20,42 @@
 
 ## Deployment Qadamlari
 
+### Render.com da Deploy (Tavsiya etiladi) ⭐
+
+#### 1. GitHub Repository
+Repository: https://github.com/Lakodros-dev/HR-tracker.git
+
+#### 2. Render.com Sozlamalari
+1. [Render Dashboard](https://dashboard.render.com/) ga kiring
+2. "New +" → "Web Service"
+3. GitHub repository: `Lakodros-dev/HR-tracker`
+
+**Build & Start:**
+```
+Build Command: pip install -r requirements.txt
+Start Command: python bot.py
+```
+
+**Environment Variables:**
+```
+BOT_TOKEN=7838291404:AAHUp8U6IcHCmU1LouUhPyUNHGZDn82f6VU
+ADMIN_ID=sizning_telegram_id
+OFFICE_LATITUDE=41.2995
+OFFICE_LONGITUDE=69.2401
+ALLOWED_DISTANCE=100
+MINI_APP_URL=https://map-for-marking-domain-static1.onrender.com/
+BACKEND_URL=https://map-for-marking-domain-1.onrender.com
+```
+
+4. "Create Web Service" → Deploy boshlanadi (3-5 daqiqa)
+5. Logs da `🤖 Bot ishga tushdi!` xabarini kutamiz
+
 ### Bot Deploy (VPS/Cloud)
 
 ```bash
 # 1. Repository clone
-git clone your-repo-url
-cd worker-tracker-bot
+git clone https://github.com/Lakodros-dev/HR-tracker.git
+cd HR-tracker
 
 # 2. Dependencies
 pip install -r requirements.txt

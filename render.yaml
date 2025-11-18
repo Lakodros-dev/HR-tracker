@@ -1,0 +1,25 @@
+services:
+  # Telegram Bot Service
+  - type: web
+    name: worker-tracker-bot
+    env: python
+    region: oregon
+    plan: free
+    runtime: python-3.11.9
+    buildCommand: pip install -r requirements.txt
+    startCommand: python bot.py
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: ADMIN_ID
+        sync: false
+      - key: OFFICE_LATITUDE
+        value: 41.2995
+      - key: OFFICE_LONGITUDE
+        value: 69.2401
+      - key: ALLOWED_DISTANCE
+        value: 100
+      - key: MINI_APP_URL
+        sync: false
+      - key: BACKEND_URL
+        sync: false
