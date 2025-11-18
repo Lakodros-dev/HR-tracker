@@ -77,10 +77,29 @@ def clear_cache():
 
 
 def save_settings(settings):
-    """Sozlamalarni saqlash"""
+    """Sozlamalarni saqlash (local va backend)"""
     try:
+        # Local faylga yozish
         with open(SETTINGS_FILE, 'w', encoding='utf-8') as f:
             json.dump(settings, f, indent=2, ensure_ascii=False)
+        
+        # Backend ga yuborish
+        try:
+            response = requests.post(
+                f'{BACKEND_URL}/api/update_settings',
+                json=settings,
+                timeout=5
+            )
+            if response.status_code == 200:
+                print(f"✅ Sozlamalar backend ga yuborildi")
+            else:
+                print(f"⚠️ Backend ga yuborib bo'lmadi: {response.status_code}")
+        except Exception as e:
+            print(f"⚠️ Backend ga yuborishda xato: {e}")
+        
+        # Cache ni tozalash
+        clear_cache()
+        
         return True
     except Exception as e:
         print(f"Sozlamalarni saqlashda xato: {e}")

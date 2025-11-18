@@ -24,6 +24,10 @@ async def request_morning_location(context: ContextTypes.DEFAULT_TYPE):
         user_id = employee['user_id']
         name = employee.get('name', 'Hodim')
         
+        # Adminni o'tkazib yuborish
+        if user_id == config.ADMIN_ID:
+            continue
+        
         # Faqat tasdiqlangan hodimlar uchun
         if not db.is_approved(user_id):
             continue
@@ -64,6 +68,10 @@ async def check_missing_locations(context: ContextTypes.DEFAULT_TYPE):
     for employee in employees:
         user_id = employee['user_id']
         name = employee.get('name', 'Hodim')
+        
+        # Adminni o'tkazib yuborish
+        if user_id == config.ADMIN_ID:
+            continue
         
         # Faqat tasdiqlangan hodimlar uchun
         if not db.is_approved(user_id):
@@ -117,6 +125,10 @@ async def send_lunch_notification(context: ContextTypes.DEFAULT_TYPE):
         user_id = employee['user_id']
         name = employee.get('name', 'Hodim')
         
+        # Adminni o'tkazib yuborish
+        if user_id == config.ADMIN_ID:
+            continue
+        
         # Faqat tasdiqlangan hodimlar uchun
         if not db.is_approved(user_id):
             continue
@@ -165,6 +177,10 @@ async def periodic_location_request(context: ContextTypes.DEFAULT_TYPE):
     for employee in employees:
         user_id = employee['user_id']
         name = employee.get('name', 'Hodim')
+        
+        # Adminni o'tkazib yuborish
+        if user_id == config.ADMIN_ID:
+            continue
         
         # Faqat tasdiqlangan hodimlar uchun
         if not db.is_approved(user_id):

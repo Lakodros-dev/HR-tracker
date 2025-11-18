@@ -64,6 +64,10 @@ async def send_end_of_day_stats(context: ContextTypes.DEFAULT_TYPE):
         user_id = employee['user_id']
         name = employee.get('name', 'Hodim')
         
+        # Adminni o'tkazib yuborish
+        if user_id == config.ADMIN_ID:
+            continue
+        
         # Faqat tasdiqlangan hodimlar uchun
         if not db.is_approved(user_id):
             continue

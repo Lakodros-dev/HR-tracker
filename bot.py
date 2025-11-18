@@ -13,8 +13,9 @@ from admin_settings import (
 )
 from mini_app_handler import handle_mini_app_data
 from employee_management import (
-    handle_start, show_pending_users, approve_user, reject_user,
-    show_remove_employee_menu, remove_employee
+    handle_start, show_pending_users, show_pending_users_text, 
+    approve_user, reject_user,
+    show_remove_employee_menu, show_remove_employee_menu_text, remove_employee
 )
 from work_time_tracker import send_end_of_day_stats
 
@@ -98,7 +99,11 @@ async def my_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     
     if not db.is_employee(user_id):
-        await update.message.reply_text("❌ Siz ro'yxatdan o'tmagansiz!")
+        await update.message.reply_text("❌ Siz ro'yxatdan o'tmagansiz!\n\n/start komandasi bilan ro'yxatdan o'ting.")
+        return
+    
+    if not db.is_approved(user_id):
+        await update.message.reply_text("⏳ Sizning arizangiz hali tasdiqlanmagan.\n\nAdmin tasdiqlashini kuting.")
         return
     
     status = db.get_attendance_status(user_id)
@@ -144,12 +149,12 @@ async def handle_admin_buttons(update: Update, context: ContextTypes.DEFAULT_TYP
     
     if text == "📊 Bugungi Hisobot":
         await show_daily_report_menu(update, context)
+    elif text == "👥 Kutish ro'yxati":
+        await show_pending_users_text(update, context)
+    elif text == "🗑 Hodimni o'chirish":
+        await show_remove_employee_menu_text(update, context)
     elif text == "🏢 Ofisni Belgilash":
         await show_office_setup(update, context)
-    elif text == "👥 Hodimlar Holati":
-        await admin_status(update, context)
-    elif text == "🗺 Live Map":
-        await start_live_map(update, context)
     elif text == "⏰ Ish Vaqtini Sozlash":
         return  # ConversationHandler boshqaradi
     elif text == "📅 Hisobot Oralig'i":
@@ -212,9 +217,10 @@ async def receive_work_hours(update: Update, context: ContextTypes.DEFAULT_TYPE)
         if update_work_hours(start_hour, end_hour):
             # Admin klaviaturasini qaytarish
             keyboard = [
-                [KeyboardButton("📊 Bugungi Hisobot"), KeyboardButton("🏢 Ofisni Belgilash")],
-                [KeyboardButton("👥 Hodimlar Holati"), KeyboardButton("🗺 Live Map")],
-                [KeyboardButton("⏰ Ish Vaqtini Sozlash"), KeyboardButton("📅 Hisobot Oralig'i")]
+                [KeyboardButton("📊 Bugungi Hisobot"), KeyboardButton("👥 Kutish ro'yxati")],
+                [KeyboardButton("🗑 Hodimni o'chirish"), KeyboardButton("🏢 Ofisni Belgilash")],
+                [KeyboardButton("⏰ Ish Vaqtini Sozlash"), KeyboardButton("📅 Hisobot Oralig'i")],
+                [KeyboardButton("📖 Qo'llanma")]
             ]
             reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
             
@@ -242,9 +248,10 @@ async def receive_work_hours(update: Update, context: ContextTypes.DEFAULT_TYPE)
 async def cancel_work_hours(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Ish vaqtini sozlashni bekor qilish"""
     keyboard = [
-        [KeyboardButton("📊 Bugungi Hisobot"), KeyboardButton("🏢 Ofisni Belgilash")],
-        [KeyboardButton("👥 Hodimlar Holati"), KeyboardButton("🗺 Live Map")],
-        [KeyboardButton("⏰ Ish Vaqtini Sozlash"), KeyboardButton("📅 Hisobot Oralig'i")]
+        [KeyboardButton("📊 Bugungi Hisobot"), KeyboardButton("👥 Kutish ro'yxati")],
+        [KeyboardButton("🗑 Hodimni o'chirish"), KeyboardButton("🏢 Ofisni Belgilash")],
+        [KeyboardButton("⏰ Ish Vaqtini Sozlash"), KeyboardButton("📅 Hisobot Oralig'i")],
+        [KeyboardButton("📖 Qo'llanma")]
     ]
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     
@@ -407,10 +414,28 @@ def main():
     application.add_handler(CommandHandler("set_office", handle_office_location_command))
     application.add_handler(CommandHandler("set_area", handle_office_area_command))
     
+    # Video handler (file_id olish uchun)
+    async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Video yuborilganda file_id ni qaytarish"""
+        if update.effective_user.id == config.ADMIN_ID:
+            video = update.message.video
+            file_id = video.file_id
+            await update.message.reply_text(
+                f"📹 Video qabul qilindi!\n\n"
+                f"File ID:\n`{file_id}`\n\n"
+                f"Bu ID ni qo'llanma uchun ishlatishingiz mumkin.",
+                parse_mode='Markdown'
+            )
+    
+    application.add_handler(MessageHandler(filters.VIDEO, handle_video))
+    
     # Lokatsiya va hisobot
     application.add_handler(MessageHandler(filters.LOCATION, handle_location))
     application.add_handler(CommandHandler("report", my_report))
     application.add_handler(MessageHandler(filters.Regex("📊 Mening hisobotim"), my_report))
+    
+    # Qo'llanma (admin va hodimlar uchun)
+    application.add_handler(MessageHandler(filters.Regex("📖 Qo'llanma"), show_guide))
     
     # Ish vaqtini sozlash (Conversation)
     work_hours_conv = ConversationHandler(
@@ -424,7 +449,7 @@ def main():
     
     # Admin tugmalar (boshqa tugmalar)
     application.add_handler(MessageHandler(
-        filters.Regex("📊 Bugungi Hisobot|🏢 Ofisni Belgilash|👥 Hodimlar Holati|🗺 Live Map|📅 Hisobot Oralig'i"), 
+        filters.Regex("📊 Bugungi Hisobot|👥 Kutish ro'yxati|🗑 Hodimni o'chirish|🏢 Ofisni Belgilash|⏰ Ish Vaqtini Sozlash|📅 Hisobot Oralig'i"), 
         handle_admin_buttons
     ))
     
@@ -641,6 +666,42 @@ def main():
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
+async def show_guide(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Qo'llanma videosini yuborish (admin va hodimlar uchun)"""
+    user_id = update.effective_user.id
+    
+    # Admin uchun qo'llanma
+    if user_id == config.ADMIN_ID:
+        ADMIN_GUIDE_VIDEO_FILE_ID = "BAACAgIAAxkBAAOqaRvw7txl2sjRZMCwWrnYrkmdPHYAAliCAAI9leFILEYNB-_S3142BA"
+        try:
+            await context.bot.send_video(
+                chat_id=update.effective_chat.id,
+                video=ADMIN_GUIDE_VIDEO_FILE_ID,
+                caption="📖 Admin uchun qo'llanma\n\n"
+                        "Ushbu videoda botning barcha admin funksiyalari va sozlamalari tushuntirilgan."
+            )
+        except Exception as e:
+            await update.message.reply_text(
+                f"❌ Qo'llanma videosini yuborishda xato:\n{str(e)}\n\n"
+                "Iltimos, keyinroq qayta urinib ko'ring."
+            )
+    # Hodim uchun qo'llanma
+    else:
+        EMPLOYEE_GUIDE_VIDEO_FILE_ID = "BAACAgIAAxkBAAPGaRv7jAABYC9OC8RpARCItuSM-B6QAAKmggACPZXhSO9lh0JnEDVaNgQ"
+        try:
+            await context.bot.send_video(
+                chat_id=update.effective_chat.id,
+                video=EMPLOYEE_GUIDE_VIDEO_FILE_ID,
+                caption="📖 Hodim uchun qo'llanma\n\n"
+                        "Ushbu videoda botdan qanday foydalanish ko'rsatilgan."
+            )
+        except Exception as e:
+            await update.message.reply_text(
+                f"❌ Qo'llanma videosini yuborishda xato:\n{str(e)}\n\n"
+                "Iltimos, keyinroq qayta urinib ko'ring."
+            )
+
+
 async def show_office_setup(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Ofis sozlash menyusi"""
     keyboard = []
@@ -661,23 +722,37 @@ async def show_office_setup(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def show_daily_report_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Bugungi hisobot menyusi"""
-    employees = db.get_all_active_employees()
+    employees = db.get_all_employees()
     
     # Admin'ni ro'yxatdan chiqarish
-    employees = [emp for emp in employees if emp[0] != config.ADMIN_ID]
+    employees = [emp for emp in employees if emp['user_id'] != config.ADMIN_ID]
     
     if not employees:
         await update.message.reply_text("📊 Hozircha hodimlar yo'q")
+        return
+    
+    # Bugungi hisobotlar bormi tekshirish
+    has_reports = False
+    for emp in employees:
+        logs = db.get_today_report(emp['user_id'])
+        if logs:
+            has_reports = True
+            break
+    
+    if not has_reports:
+        await update.message.reply_text("📊 Bugun hali hisobotlar yo'q\n\nHodimlar lokatsiya yuborishlari kutilmoqda.")
         return
     
     # Inline keyboard yaratish
     keyboard = []
     keyboard.append([InlineKeyboardButton("📈 Umumiy Hisobot", callback_data="general_report")])
     
-    # Hodimlar ro'yxati (admin'siz)
-    for user_id, username, full_name in employees:
-        name = full_name or username or f"ID: {user_id}"
-        keyboard.append([InlineKeyboardButton(f"👤 {name}", callback_data=f"user_report_{user_id}")])
+    # Hodimlar ro'yxati (faqat hisoboti borlar)
+    for emp in employees:
+        logs = db.get_today_report(emp['user_id'])
+        if logs:
+            name = emp['name'] or emp['username'] or f"ID: {emp['user_id']}"
+            keyboard.append([InlineKeyboardButton(f"👤 {name} ({len(logs)} ta)", callback_data=f"user_report_{emp['user_id']}")])
     
     reply_markup = InlineKeyboardMarkup(keyboard)
     

@@ -4,27 +4,27 @@
     "longitude": 69.2401,
     "radius": 100
   },
+  "office_area": {
+    "point1": {
+      "lat": 40.46011604698766,
+      "lng": 68.0735206604004
+    },
+    "point2": {
+      "lat": 40.45859004278498,
+      "lng": 68.07492613792421
+    }
+  },
+  "use_area_mode": true,
   "work_hours": {
-    "start": 9,
-    "end": 17
+    "start": 8,
+    "end": 20
   },
   "lunch_hours": {
     "start": 12,
     "end": 13
   },
   "location_interval": {
-    "minutes": 30,
+    "minutes": 15,
     "grace_period": 5
-  },
-  "office_area": {
-    "point1": {
-      "lat": 41.345123708626666,
-      "lng": 69.2018508911133
-    },
-    "point2": {
-      "lat": 41.31187704244544,
-      "lng": 69.25952911376955
-    }
-  },
-  "use_area_mode": true
+  }
 }
