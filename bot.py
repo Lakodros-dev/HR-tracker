@@ -109,10 +109,11 @@ async def my_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
     status = db.get_attendance_status(user_id)
     logs = db.get_today_report(user_id)
     
+    no_data = "Yo'q"
     report = f"📊 Bugungi hisobotingiz\n\n"
     report += f"Holat: {'✅ Ish joyida' if status and status['is_present'] else '❌ Ish joyida emas'}\n"
-    report += f"Kelgan vaqt: {format_time(status['check_in_time']) if status else 'Yo\'q'}\n"
-    report += f"Ketgan vaqt: {format_time(status['check_out_time']) if status else 'Yo\'q'}\n"
+    report += f"Kelgan vaqt: {format_time(status['check_in_time']) if status else no_data}\n"
+    report += f"Ketgan vaqt: {format_time(status['check_out_time']) if status else no_data}\n"
     report += f"Ogohlantirishlar: {status['warnings_count'] if status else 0}\n\n"
     
     if logs:
@@ -578,10 +579,11 @@ def main():
             report = f"👤 {name} - Batafsil hisobot\n\n"
             
             # Asosiy ma'lumotlar
+            no_data = "Yo'q"
             report += f"📊 Bugungi holat:\n"
             report += f"   Hozir: {'✅ Ish joyida' if status and status['is_present'] else '❌ Ish joyida emas'}\n"
-            report += f"   Kelgan: {format_time(status['check_in_time']) if status else 'Yo\'q'}\n"
-            report += f"   Ketgan: {format_time(status['check_out_time']) if status else 'Yo\'q'}\n"
+            report += f"   Kelgan: {format_time(status['check_in_time']) if status else no_data}\n"
+            report += f"   Ketgan: {format_time(status['check_out_time']) if status else no_data}\n"
             report += f"   Ogohlantirishlar: {status['warnings_count'] if status else 0}\n\n"
             
             # Lokatsiya ma'lumotlari
