@@ -14,8 +14,10 @@ from admin_settings import (
 from mini_app_handler import handle_mini_app_data
 from employee_management import (
     handle_start, show_pending_users, show_pending_users_text, 
-    approve_user, reject_user,
-    show_remove_employee_menu, show_remove_employee_menu_text, remove_employee
+    start_approval_with_hours, receive_approval_start_time, receive_approval_end_time, cancel_approval,
+    reject_user,
+    show_remove_employee_menu, show_remove_employee_menu_text, remove_employee,
+    show_employees_for_work_hours, start_edit_work_hours, receive_edit_start_time, receive_edit_end_time, cancel_edit_hours
 )
 from work_time_tracker import send_end_of_day_stats
 
@@ -34,6 +36,25 @@ scheduler = AsyncIOScheduler()
 
 # Conversation states
 WAITING_WORK_HOURS = 1
+WAITING_MONTHLY_START_DATE = 2
+WAITING_MONTHLY_END_DATE = 3
+WAITING_MONTHLY_USER_SELECT = 4
+WAITING_APPROVE_START_TIME = 10
+WAITING_APPROVE_END_TIME = 11
+WAITING_EDIT_START_TIME = 20
+WAITING_EDIT_END_TIME = 21
+
+
+async def block_forwarded_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Forwarded (uzatilgan) xabarlarni bloklash"""
+    if update.message and update.message.forward_date:
+        await update.message.reply_text(
+            "❌ Uzatilgan xabarlar taqiqlangan!\n\n"
+            "Iltimos, xabarni to'g'ridan-to'g'ri yozing."
+        )
+        return
+    # Agar forwarded emas bo'lsa, keyingi handlerga o'tkazish
+    return
 
 
 async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -70,6 +91,13 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Bazaga yozish
     db.log_location(user_id, lat, lon, distance, is_valid)
+    
+    # Kunlik ish soatlarini yangilash
+    from daily_work_calculator import update_daily_work_hours_for_user
+    try:
+        update_daily_work_hours_for_user(user_id)
+    except Exception as e:
+        logger.error(f"Kunlik ish soatlarini yangilashda xato: {e}")
     
     # Bugungi birinchi lokatsiyami?
     today_locations = db.get_today_report(user_id)
@@ -157,7 +185,7 @@ async def handle_admin_buttons(update: Update, context: ContextTypes.DEFAULT_TYP
     elif text == "🏢 Ofisni Belgilash":
         await show_office_setup(update, context)
     elif text == "⏰ Ish Vaqtini Sozlash":
-        return  # ConversationHandler boshqaradi
+        await show_employees_for_work_hours(update, context)
     elif text == "📅 Hisobot Oralig'i":
         await show_report_interval_setup(update, context)
 
@@ -252,7 +280,7 @@ async def cancel_work_hours(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [KeyboardButton("📊 Bugungi Hisobot"), KeyboardButton("👥 Kutish ro'yxati")],
         [KeyboardButton("🗑 Hodimni o'chirish"), KeyboardButton("🏢 Ofisni Belgilash")],
         [KeyboardButton("⏰ Ish Vaqtini Sozlash"), KeyboardButton("📅 Hisobot Oralig'i")],
-        [KeyboardButton("📖 Qo'llanma")]
+        [KeyboardButton("📆 Oylik Hisobot"), KeyboardButton("📖 Qo'llanma")]
     ]
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     
@@ -407,6 +435,9 @@ def main():
         )
     
     # Handlerlar
+    # Forwarded xabarlarni bloklash (eng birinchi tekshiruv)
+    application.add_handler(MessageHandler(filters.FORWARDED, block_forwarded_messages))
+    
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("test_webapp", test_webapp))
     application.add_handler(CommandHandler("refresh", refresh_settings))
@@ -438,26 +469,46 @@ def main():
     # Qo'llanma (admin va hodimlar uchun)
     application.add_handler(MessageHandler(filters.Regex("📖 Qo'llanma"), show_guide))
     
-    # Ish vaqtini sozlash (Conversation)
-    work_hours_conv = ConversationHandler(
-        entry_points=[MessageHandler(filters.Regex("^⏰ Ish Vaqtini Sozlash$"), start_work_hours_setup)],
+    # Ish vaqtini sozlash (Conversation) - Individual
+    edit_work_hours_conv = ConversationHandler(
+        entry_points=[CallbackQueryHandler(start_edit_work_hours, pattern="^edit_hours_")],
         states={
-            WAITING_WORK_HOURS: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_work_hours)]
+            WAITING_EDIT_START_TIME: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_edit_start_time)],
+            WAITING_EDIT_END_TIME: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_edit_end_time)]
         },
-        fallbacks=[CommandHandler("cancel", cancel_work_hours)]
+        fallbacks=[CommandHandler("cancel", cancel_edit_hours)]
     )
-    application.add_handler(work_hours_conv)
+    application.add_handler(edit_work_hours_conv)
     
-    # Admin tugmalar (boshqa tugmalar)
-    application.add_handler(MessageHandler(
-        filters.Regex("📊 Bugungi Hisobot|👥 Kutish ro'yxati|🗑 Hodimni o'chirish|🏢 Ofisni Belgilash|⏰ Ish Vaqtini Sozlash|📅 Hisobot Oralig'i"), 
-        handle_admin_buttons
-    ))
+    # Oylik hisobot (Conversation)
+    from monthly_report import (
+        start_monthly_report, receive_start_date, receive_end_date,
+        handle_monthly_user_select, cancel_monthly_report
+    )
     
-    # Web App handler
-    application.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, handle_mini_app_data))
+    monthly_report_conv = ConversationHandler(
+        entry_points=[MessageHandler(filters.Regex("^📆 Oylik Hisobot$"), start_monthly_report)],
+        states={
+            WAITING_MONTHLY_START_DATE: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_start_date)],
+            WAITING_MONTHLY_END_DATE: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_end_date)],
+            WAITING_MONTHLY_USER_SELECT: [CallbackQueryHandler(handle_monthly_user_select, pattern="^monthly_")]
+        },
+        fallbacks=[CommandHandler("cancel", cancel_monthly_report)]
+    )
+    application.add_handler(monthly_report_conv)
     
-    # Callback query handler
+    # Tasdiqlash (Conversation) - ish vaqti bilan
+    approval_conv = ConversationHandler(
+        entry_points=[CallbackQueryHandler(start_approval_with_hours, pattern="^approve_")],
+        states={
+            WAITING_APPROVE_START_TIME: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_approval_start_time)],
+            WAITING_APPROVE_END_TIME: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_approval_end_time)]
+        },
+        fallbacks=[CommandHandler("cancel", cancel_approval)]
+    )
+    application.add_handler(approval_conv)
+    
+    # Callback query handler (AFTER ConversationHandlers so they can intercept first)
     async def handle_callbacks(update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
         await query.answer()
@@ -465,9 +516,6 @@ def main():
         # Hodimlarni boshqarish
         if query.data == "pending_users":
             await show_pending_users(update, context)
-        elif query.data.startswith("approve_"):
-            user_id = int(query.data.split("_")[1])
-            await approve_user(update, context, user_id)
         elif query.data.startswith("reject_"):
             user_id = int(query.data.split("_")[1])
             await reject_user(update, context, user_id)
@@ -658,6 +706,17 @@ def main():
                 )
     
     application.add_handler(CallbackQueryHandler(handle_callbacks))
+    
+    
+    # Admin tugmalar (boshqa tugmalar)
+    application.add_handler(MessageHandler(
+        filters.Regex("📊 Bugungi Hisobot|👥 Kutish ro'yxati|🗑 Hodimni o'chirish|🏢 Ofisni Belgilash|⏰ Ish Vaqtini Sozlash|📅 Hisobot Oralig'i"), 
+        handle_admin_buttons
+    ))
+    
+    # Web App handler
+    application.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, handle_mini_app_data))
+    
     
     # Scheduler ni sozlash
     from scheduler_tasks import setup_scheduler

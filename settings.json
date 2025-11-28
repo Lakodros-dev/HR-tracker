@@ -6,25 +6,25 @@
   },
   "office_area": {
     "point1": {
-      "lat": 40.46011604698766,
-      "lng": 68.0735206604004
+      "lat": 41.2995,
+      "lng": 69.2401
     },
     "point2": {
-      "lat": 40.45859004278498,
-      "lng": 68.07492613792421
+      "lat": 41.3005,
+      "lng": 69.2411
     }
   },
-  "use_area_mode": true,
+  "use_area_mode": false,
   "work_hours": {
-    "start": 8,
-    "end": 20
+    "start": 9,
+    "end": 17
   },
   "lunch_hours": {
     "start": 12,
     "end": 13
   },
   "location_interval": {
-    "minutes": 15,
+    "minutes": 30,
     "grace_period": 5
   }
 }
