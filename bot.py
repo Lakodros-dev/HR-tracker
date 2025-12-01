@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 from telegram import Update, KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo, ReplyKeyboardRemove
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler, ConversationHandler
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler, ConversationHandler, ApplicationHandlerStop
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 import config
@@ -52,7 +52,8 @@ async def block_forwarded_messages(update: Update, context: ContextTypes.DEFAULT
             "❌ Uzatilgan xabarlar taqiqlangan!\n\n"
             "Iltimos, xabarni to'g'ridan-to'g'ri yozing."
         )
-        return
+        # Handler zanjirini to'xtatish (keyingi handlerlar ishga tushmaydi)
+        raise ApplicationHandlerStop
     # Agar forwarded emas bo'lsa, keyingi handlerga o'tkazish
     return
 
