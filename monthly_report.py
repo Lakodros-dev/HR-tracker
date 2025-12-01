@@ -68,13 +68,14 @@ async def receive_end_date(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         context.user_data['monthly_end_date'] = text
         
-        # Hodimlarni ko'rsatish (faqat tasdiqlangan)
+        # Hodimlarni ko'rsatish (faqat tasdiqlangan, adminlar emas)
         from database import Database
+        import config
         db = Database()
         all_employees = db.get_all_employees()
         
-        # Faqat tasdiqlangan hodimlar
-        employees = [emp for emp in all_employees if db.is_approved(emp['user_id'])]
+        # Faqat tasdiqlangan hodimlar va adminlar emas
+        employees = [emp for emp in all_employees if db.is_approved(emp['user_id']) and not config.is_admin(emp['user_id'])]
         
         if not employees:
             await update.message.reply_text("❌ Tasdiqlangan hodimlar topilmadi!")

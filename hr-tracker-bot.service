@@ -1,0 +1,19 @@
+[Unit]
+Description=HR Tracker Telegram Bot
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/HR-tracker
+Environment="PATH=/home/ubuntu/HR-tracker/venv/bin:/usr/bin"
+ExecStart=/home/ubuntu/HR-tracker/venv/bin/python bot.py
+Restart=always
+RestartSec=10
+
+# Logging
+StandardOutput=append:/var/log/hr-tracker-bot.log
+StandardError=append:/var/log/hr-tracker-bot-error.log
+
+[Install]
+WantedBy=multi-user.target

@@ -53,10 +53,16 @@ Thumbs.db
 
 # Logs
 *.log
+/var/log/hr-tracker-bot*.log
 
 # Temporary
 *.tmp
 *.temp
+
+# Backups
+*.backup
+*.bak
+attendance-*.db
 
 # Mini App (deployed separately)
 WorkerTrackerOfficeMap/

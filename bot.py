@@ -171,13 +171,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_admin_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Admin tugmalarini qayta ishlash"""
+    from general_report import start_general_report
     if not config.is_admin(update.effective_user.id):
         return
     
     text = update.message.text
     
-    if text == "📊 Bugungi Hisobot":
-        await show_daily_report_menu(update, context)
+    if text == "📊 Hisobot" or text == "📊 Bugungi Hisobot":
+        await start_general_report(update, context)
     elif text == "👥 Kutish ro'yxati":
         await show_pending_users_text(update, context)
     elif text == "🗑 Hodimni o'chirish":
@@ -246,7 +247,7 @@ async def receive_work_hours(update: Update, context: ContextTypes.DEFAULT_TYPE)
         if update_work_hours(start_hour, end_hour):
             # Admin klaviaturasini qaytarish
             keyboard = [
-                [KeyboardButton("📊 Bugungi Hisobot"), KeyboardButton("👥 Kutish ro'yxati")],
+                [KeyboardButton("📊 Hisobot"), KeyboardButton("👥 Kutish ro'yxati")],
                 [KeyboardButton("🗑 Hodimni o'chirish"), KeyboardButton("🏢 Ofisni Belgilash")],
                 [KeyboardButton("⏰ Ish Vaqtini Sozlash"), KeyboardButton("📅 Hisobot Oralig'i")],
                 [KeyboardButton("📖 Qo'llanma")]
@@ -277,10 +278,10 @@ async def receive_work_hours(update: Update, context: ContextTypes.DEFAULT_TYPE)
 async def cancel_work_hours(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Ish vaqtini sozlashni bekor qilish"""
     keyboard = [
-        [KeyboardButton("📊 Bugungi Hisobot"), KeyboardButton("👥 Kutish ro'yxati")],
+        [KeyboardButton("📊 Hisobot"), KeyboardButton("👥 Kutish ro'yxati")],
         [KeyboardButton("🗑 Hodimni o'chirish"), KeyboardButton("🏢 Ofisni Belgilash")],
         [KeyboardButton("⏰ Ish Vaqtini Sozlash"), KeyboardButton("📅 Hisobot Oralig'i")],
-        [KeyboardButton("📆 Oylik Hisobot"), KeyboardButton("📖 Qo'llanma")]
+        [KeyboardButton("📖 Qo'llanma")]
     ]
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     
@@ -398,7 +399,15 @@ def main():
         return
     
     # Application yaratish
-    application = Application.builder().token(config.BOT_TOKEN).build()
+    from telegram.request import HTTPXRequest
+    request = HTTPXRequest(
+        connection_pool_size=8, 
+        read_timeout=60, 
+        write_timeout=60, 
+        connect_timeout=60,
+        pool_timeout=60
+    )
+    application = Application.builder().token(config.BOT_TOKEN).request(request).build()
     
     # Test komandasi
     async def test_webapp(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -480,22 +489,24 @@ def main():
     )
     application.add_handler(edit_work_hours_conv)
     
-    # Oylik hisobot (Conversation)
-    from monthly_report import (
-        start_monthly_report, receive_start_date, receive_end_date,
-        handle_monthly_user_select, cancel_monthly_report
+    # Oylik hisobot (Conversation) - ENDI UMUMIY HISOBOT
+    from general_report import (
+        start_general_report, handle_report_user_select, 
+        receive_report_start_date, receive_report_end_date, 
+        cancel_general_report,
+        WAITING_REPORT_USER_SELECT, WAITING_REPORT_START_DATE, WAITING_REPORT_END_DATE
     )
     
-    monthly_report_conv = ConversationHandler(
-        entry_points=[MessageHandler(filters.Regex("^📆 Oylik Hisobot$"), start_monthly_report)],
+    general_report_conv = ConversationHandler(
+        entry_points=[MessageHandler(filters.Regex("^📊 Hisobot$"), start_general_report)],
         states={
-            WAITING_MONTHLY_START_DATE: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_start_date)],
-            WAITING_MONTHLY_END_DATE: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_end_date)],
-            WAITING_MONTHLY_USER_SELECT: [CallbackQueryHandler(handle_monthly_user_select, pattern="^monthly_")]
+            WAITING_REPORT_USER_SELECT: [CallbackQueryHandler(handle_report_user_select, pattern="^report_user_")],
+            WAITING_REPORT_START_DATE: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_report_start_date)],
+            WAITING_REPORT_END_DATE: [MessageHandler(filters.TEXT & ~filters.COMMAND, receive_report_end_date)]
         },
-        fallbacks=[CommandHandler("cancel", cancel_monthly_report)]
+        fallbacks=[CommandHandler("cancel", cancel_general_report)]
     )
-    application.add_handler(monthly_report_conv)
+    application.add_handler(general_report_conv)
     
     # Tasdiqlash (Conversation) - ish vaqti bilan
     approval_conv = ConversationHandler(
@@ -710,7 +721,7 @@ def main():
     
     # Admin tugmalar (boshqa tugmalar)
     application.add_handler(MessageHandler(
-        filters.Regex("📊 Bugungi Hisobot|👥 Kutish ro'yxati|🗑 Hodimni o'chirish|🏢 Ofisni Belgilash|⏰ Ish Vaqtini Sozlash|📅 Hisobot Oralig'i"), 
+        filters.Regex("📊 Hisobot|📊 Bugungi Hisobot|👥 Kutish ro'yxati|🗑 Hodimni o'chirish|🏢 Ofisni Belgilash|⏰ Ish Vaqtini Sozlash|📅 Hisobot Oralig'i"), 
         handle_admin_buttons
     ))
     

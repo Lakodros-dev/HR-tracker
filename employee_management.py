@@ -27,7 +27,7 @@ async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if config.is_admin(user_id):
         # Admin klaviaturasi
         keyboard = [
-            [KeyboardButton("📊 Bugungi Hisobot"), KeyboardButton("👥 Kutish ro'yxati")],
+            [KeyboardButton("📊 Hisobot"), KeyboardButton("👥 Kutish ro'yxati")],
             [KeyboardButton("🗑 Hodimni o'chirish"), KeyboardButton("🏢 Ofisni Belgilash")],
             [KeyboardButton("⏰ Ish Vaqtini Sozlash"), KeyboardButton("📅 Hisobot Oralig'i")],
             [KeyboardButton("📖 Qo'llanma")]
@@ -37,7 +37,7 @@ async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             f"👋 Xush kelibsiz, Admin!\n\n"
             f"🎛 Admin paneli:\n"
-            f"📊 Bugungi Hisobot - Hodimlar hisoboti\n"
+            f"📊 Hisobot - Hodimlar hisoboti\n"
             f"👥 Kutish ro'yxati - Yangi foydalanuvchilar\n"
             f"🗑 Hodimni o'chirish - Hodimni tizimdan o'chirish\n"
             f"🏢 Ofisni Belgilash - Koordinatalar\n"
